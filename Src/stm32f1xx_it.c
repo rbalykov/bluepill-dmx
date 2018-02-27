@@ -212,6 +212,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 /**
 * @brief This function handles USART1 global interrupt.
 */
+#if 0
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
@@ -222,7 +223,7 @@ void USART1_IRQHandler(void)
 
   /* USER CODE END USART1_IRQn 1 */
 }
-
+#endif
 /**
 * @brief This function handles USART2 global interrupt.
 */
