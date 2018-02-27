@@ -16,5 +16,8 @@
  */
 #define CMSIS_device_header "stm32f10x.h"
 
+#define RTE_DEVICE_STDPERIPH_FRAMEWORK
+#define RTE_DEVICE_STDPERIPH_RCC
+#define RTE_DEVICE_STDPERIPH_USART
 
 #endif /* RTE_COMPONENTS_H */
