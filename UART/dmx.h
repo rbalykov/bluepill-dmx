@@ -1,6 +1,21 @@
 #ifndef ___DMX_512_HFILE___
 #define ___DMX_512_HFILE___
 
+#define			DMX_TXSM_STATE_UNKNOWN 		(0)
+#define			DMX_TXSM_STATE_IDLE 		(1)
+#define			DMX_TXSM_STATE_KEEPALIVE	(2)
+#define			DMX_TXSM_STATE_BUSY 		(3)
+#define			DMX_TXSM_STATE_FAULT 		(4)
+#define			DMX_TXSM_STATE_SIZE 		(5)
+
+#define			DMX_TXSM_TRANSITION_UNKNOWN (0)
+#define			DMX_TXSM_TRANSITION_TIMEOUT	(1)
+#define			DMX_TXSM_TRANSITION_REVOKE	(2)
+#define			DMX_TXSM_TRANSITION_ACQIRED	(3)
+#define			DMX_TXSM_TRANSITION_DONE	(4)
+#define			DMX_TXSM_TRANSITION_ERROR	(5)
+#define			DMX_TXSM_TRANSITION_SIZE	(6)
+
 // DMX RX Status
 
 #define			DMX_RXSM_STATE_UNKNOWN 	(0)

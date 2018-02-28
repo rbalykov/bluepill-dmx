@@ -10,113 +10,176 @@ void TIM4_IRQHandler	(void);
 void USART1_IRQHandler	(void);
 
 #define DMX_DEBUG
+// -----------------------------------------------------------------------------
+// TX FAULT HANDLERS
+// -----------------------------------------------------------------------------
+static volatile	uint8_t		dxTxSM_active_state = 0;			
+static volatile uint16_t	dxTxSM_byte_counter  = 0;		 
+
+static __inline int tx_dummy_foo () 	{ return 0; }
+typedef int (*TXSM_FaultHandler_t)(int line,char *file, char *message);	
+
+int dxTxSM_fhASSERT (int l, char* f, char* m) { return 0;}
+
+TXSM_FaultHandler_t dxTxSM_FAULT_ASSERT 	= dxTxSM_fhASSERT;
+
+// ----------------------------------------------------------------------------
+// TX HANDLERS
+// ----------------------------------------------------------------------------
+typedef int (*TXSM_StateHandler_t)(uint16_t DR, uint16_t SR, uint8_t BR_detected);	
+
+int dxTxSM_hASSERT (uint16_t DR, uint16_t SR, uint8_t BR_detected)
+	{
+	return  dxTxSM_FAULT_ASSERT ? 
+		dxTxSM_FAULT_ASSERT(__LINE__, __FILE__, "TX illegal transition")
+		: 0 ;
+	}
+
+int dxTxSM_hERROR 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxTxSM_hTIMEOUT	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxTxSM_hREWOKE 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxTxSM_hACQIRED	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxTxSM_hDONE	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+
+// ----------------------------------------------------------------------------
+// TX STATE-TRANSITION MAP
+// ----------------------------------------------------------------------------
+static TXSM_StateHandler_t 
+dxTxSM_state_map [DMX_TXSM_STATE_SIZE][DMX_TXSM_TRANSITION_SIZE] = {0};
+
+void dxTxSM_mapinit (void)
+{
+	int i, j;
+	for (i=0; i< DMX_TXSM_STATE_SIZE; i++)
+		{ for (j=0; j< DMX_TXSM_TRANSITION_SIZE; j++)
+				{ dxTxSM_state_map [i][j] = dxTxSM_hASSERT; } }
+
+	dxTxSM_state_map [DMX_TXSM_STATE_IDLE 		][DMX_TXSM_TRANSITION_ERROR] = dxTxSM_hERROR;
+	dxTxSM_state_map [DMX_TXSM_STATE_KEEPALIVE	][DMX_TXSM_TRANSITION_ERROR] = dxTxSM_hERROR;
+	dxTxSM_state_map [DMX_TXSM_STATE_BUSY 		][DMX_TXSM_TRANSITION_ERROR] = dxTxSM_hERROR;
+	dxTxSM_state_map [DMX_TXSM_STATE_FAULT 		][DMX_TXSM_TRANSITION_ERROR] = dxTxSM_hERROR;
+
+	dxTxSM_state_map [DMX_TXSM_STATE_IDLE] 		[DMX_TXSM_TRANSITION_TIMEOUT] = dxTxSM_hTIMEOUT;
+	dxTxSM_state_map [DMX_TXSM_STATE_IDLE] 		[DMX_TXSM_TRANSITION_ACQIRED] = dxTxSM_hACQIRED;
+	dxTxSM_state_map [DMX_TXSM_STATE_KEEPALIVE]	[DMX_TXSM_TRANSITION_REVOKE]  = dxTxSM_hREWOKE;
+	dxTxSM_state_map [DMX_TXSM_STATE_BUSY]		[DMX_TXSM_TRANSITION_DONE]    = dxTxSM_hDONE;
+}
+
+
+// -----------------------------------------------------------------------------
+// RX double-buffered
+// -----------------------------------------------------------------------------
+static uint8_t	dxRxSM_buf [2][DMX_MAX_BUFFER_SIZE] = {0};
+static volatile	uint8_t		dxRxSM_active_buffer = DMX_RXSM_BUF_A;
+
+static volatile uint16_t	dxRxSM_byte_counter  = 0;		// 
+static volatile	uint8_t		dxRxSM_frame_counter = 0;		// 
+static volatile	uint8_t		dxRxSM_active_state  = 0;		// 
+
+static __inline uint8_t* rx_active_buffer()
+{
+	return dxRxSM_buf[dxRxSM_active_buffer];
+}
+
+static __inline void buffer_swap (void)
+{
+	if (dxRxSM_active_buffer == DMX_RXSM_BUF_A)
+		{ dxRxSM_active_buffer = DMX_RXSM_BUF_B; }
+	else
+		{ dxRxSM_active_buffer = DMX_RXSM_BUF_A; }	
+}
+
+static __inline int data_updated (void)
+{
+	static uint16_t last_frame = 0xFFFF;
+	int result = (dxRxSM_frame_counter != last_frame);
+	last_frame = dxRxSM_frame_counter;
+	return result;
+}
 
 // ----------------------------------------------------------------------------
 // FAULT CALLBACKS
 // ----------------------------------------------------------------------------
 typedef int (*RXSM_FaultHandler_t)(int line,char *file, char *message);	
 
-int dmx_rxsm_fault_overrun (int l, char* f, char* m)
-	{ return 0;}
+int dxRxSM_fhASSERT    	(int l, char* f, char* m) 	{ return 0;}
+int dxRxSM_fhOVERRUN 	(int l, char* f, char* m)	{ return 0;}
+int dxRxSM_fhNOISE    	(int l, char* f, char* m)	{ return 0;}
 
-int dmx_rxsm_fault_noise    (int l, char* f, char* m)
-	{ return 0;}
-
-int dmx_rxsm_fault_assert    (int l, char* f, char* m)
-	{ return 0;}
-
-RXSM_FaultHandler_t dmx_rxsm_FAULT_ORE 		= dmx_rxsm_fault_overrun;
-RXSM_FaultHandler_t dmx_rxsm_FAULT_NE  		= dmx_rxsm_fault_noise;
-RXSM_FaultHandler_t dmx_rxsm_FAULT_ASSERT 	= dmx_rxsm_fault_assert;
+RXSM_FaultHandler_t dxRxSM_FAULT_ORE 		= dxRxSM_fhOVERRUN;
+RXSM_FaultHandler_t dxRxSM_FAULT_NE  		= dxRxSM_fhNOISE;
+RXSM_FaultHandler_t dxRxSM_FAULT_ASSERT 	= dxRxSM_fhASSERT;
 
 // ----------------------------------------------------------------------------
 // STATE-TRANSITION CALLBACKS
 // ----------------------------------------------------------------------------
 typedef int (*RXSM_StateHandler_t)(uint16_t DR, uint16_t SR, uint8_t BR_detected);	
 
-int dmx_rxsm_handler_assert (uint16_t DR, uint16_t SR, uint8_t BR_detected)
+int dxRxSM_hASSERT (uint16_t DR, uint16_t SR, uint8_t BR_detected)
 	{
-	return  dmx_rxsm_FAULT_ASSERT ? 
-		dmx_rxsm_FAULT_ASSERT(__LINE__, __FILE__, "RXSM illegal transition")
+	return  dxRxSM_FAULT_ASSERT ? 
+		dxRxSM_FAULT_ASSERT(__LINE__, __FILE__, "RX illegal transition")
 		: 0 ;
 	}
 
-int dmx_rxsm_hNOP	 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
-int dmx_rxsm_hBREAK 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
-int dmx_rxsm_hMAB 		(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
-int dmx_rxsm_hDEMAB 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
-int dmx_rxsm_hSC 		(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
-int dmx_rxsm_hDATA 		(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
-int dmx_rxsm_hCOMPLETE 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+// NO any action
+int dxRxSM_hNOP	 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+
+// user code here
+int dxRxSM_hERROR	 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxRxSM_hBREAK 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxRxSM_hMAB 		(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxRxSM_hDEMAB 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxRxSM_hSC 		(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxRxSM_hDATA 		(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+int dxRxSM_hCOMPLETE 	(uint16_t DR, uint16_t SR, uint8_t BR_detected) { return 0; }
+	
+	
 	
 // ----------------------------------------------------------------------------
-// STATE-TRANSITION MAP
+// RX STATE-TRANSITION MAP
 // ----------------------------------------------------------------------------
 static RXSM_StateHandler_t 
-dmx_rxsm_state_map [DMX_RXSM_STATE_SIZE][DMX_RXSM_TRANSITION_SIZE] = {0};
+dxRxSM_state_map [DMX_RXSM_STATE_SIZE][DMX_RXSM_TRANSITION_SIZE] = {0};
 
-void dmx_rxsm_mapinit (void)
+void dxRxSM_mapinit (void)
 {
 	int i, j;
 	for (i=0; i< DMX_RXSM_STATE_SIZE; i++)
-	{
-		for (j=0; j< DMX_RXSM_TRANSITION_SIZE; j++)
-		{
-			dmx_rxsm_state_map[i][j] = dmx_rxsm_handler_assert;
-		}
-	}
+		{ for (j=0; j< DMX_RXSM_TRANSITION_SIZE; j++)
+			{ dxRxSM_state_map[i][j] = dxRxSM_hASSERT; } }
 
-	dmx_rxsm_state_map[DMX_RXSM_STATE_AWAIT 	][DMX_RXSM_TRANSITION_FE]   = dmx_rxsm_hNOP;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_AWAIT 	][DMX_RXSM_TRANSITION_IDLE] = dmx_rxsm_hNOP;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_AWAIT 	][DMX_RXSM_TRANSITION_RXNE] = dmx_rxsm_hNOP;
+	dxRxSM_state_map[DMX_RXSM_STATE_AWAIT 	][DMX_RXSM_TRANSITION_FE]   = dxRxSM_hNOP;
+	dxRxSM_state_map[DMX_RXSM_STATE_AWAIT 	][DMX_RXSM_TRANSITION_IDLE] = dxRxSM_hNOP;
+	dxRxSM_state_map[DMX_RXSM_STATE_AWAIT 	][DMX_RXSM_TRANSITION_RXNE] = dxRxSM_hNOP;
 
-	dmx_rxsm_state_map[DMX_RXSM_STATE_AWAIT 	][DMX_RXSM_TRANSITION_BREAK] = dmx_rxsm_hBREAK;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_ERROR		][DMX_RXSM_TRANSITION_BREAK] = dmx_rxsm_hBREAK;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_COMPLETE	][DMX_RXSM_TRANSITION_BREAK] = dmx_rxsm_hBREAK;
+	dxRxSM_state_map[DMX_RXSM_STATE_AWAIT 	][DMX_RXSM_TRANSITION_BREAK] = dxRxSM_hBREAK;
+	dxRxSM_state_map[DMX_RXSM_STATE_ERROR	][DMX_RXSM_TRANSITION_BREAK] = dxRxSM_hBREAK;
+	dxRxSM_state_map[DMX_RXSM_STATE_COMPLETE][DMX_RXSM_TRANSITION_BREAK] = dxRxSM_hBREAK;
 
-	dmx_rxsm_state_map[DMX_RXSM_STATE_ARMED		][DMX_RXSM_TRANSITION_IDLE] = dmx_rxsm_hMAB;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_ARMED		][DMX_RXSM_TRANSITION_FE] 	= dmx_rxsm_hNOP;
+	dxRxSM_state_map[DMX_RXSM_STATE_ARMED	][DMX_RXSM_TRANSITION_IDLE] = dxRxSM_hMAB;
+	dxRxSM_state_map[DMX_RXSM_STATE_ARMED	][DMX_RXSM_TRANSITION_FE] 	= dxRxSM_hNOP;
 
-	dmx_rxsm_state_map[DMX_RXSM_STATE_IDLE		][DMX_RXSM_TRANSITION_FE]   = dmx_rxsm_hDEMAB;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_IDLE		][DMX_RXSM_TRANSITION_IDLE] = dmx_rxsm_hNOP;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_IDLE		][DMX_RXSM_TRANSITION_RXNE] = dmx_rxsm_hSC;
+	dxRxSM_state_map[DMX_RXSM_STATE_IDLE	][DMX_RXSM_TRANSITION_FE]   = dxRxSM_hDEMAB;
+	dxRxSM_state_map[DMX_RXSM_STATE_IDLE	][DMX_RXSM_TRANSITION_IDLE] = dxRxSM_hNOP;
+	dxRxSM_state_map[DMX_RXSM_STATE_IDLE	][DMX_RXSM_TRANSITION_RXNE] = dxRxSM_hSC;
 
-	dmx_rxsm_state_map[DMX_RXSM_STATE_DATA 		][DMX_RXSM_TRANSITION_RXNE] = dmx_rxsm_hDATA;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_DATA 		][DMX_RXSM_TRANSITION_IDLE] = dmx_rxsm_hNOP;
-	dmx_rxsm_state_map[DMX_RXSM_STATE_DATA 		][DMX_RXSM_TRANSITION_FE]   = dmx_rxsm_hCOMPLETE;
+	dxRxSM_state_map[DMX_RXSM_STATE_DATA 	][DMX_RXSM_TRANSITION_RXNE] = dxRxSM_hDATA;
+	dxRxSM_state_map[DMX_RXSM_STATE_DATA 	][DMX_RXSM_TRANSITION_IDLE] = dxRxSM_hNOP;
+	dxRxSM_state_map[DMX_RXSM_STATE_DATA 	][DMX_RXSM_TRANSITION_FE]   = dxRxSM_hCOMPLETE;
+
+
+	dxRxSM_state_map[DMX_RXSM_STATE_UNKNOWN 	][DMX_RXSM_TRANSITION_FAULT] = dxRxSM_hERROR;
+	dxRxSM_state_map[DMX_RXSM_STATE_AWAIT 		][DMX_RXSM_TRANSITION_FAULT] = dxRxSM_hERROR;
+	dxRxSM_state_map[DMX_RXSM_STATE_ARMED	    ][DMX_RXSM_TRANSITION_FAULT] = dxRxSM_hERROR;
+	dxRxSM_state_map[DMX_RXSM_STATE_IDLE		][DMX_RXSM_TRANSITION_FAULT] = dxRxSM_hERROR;
+	dxRxSM_state_map[DMX_RXSM_STATE_DATA 	    ][DMX_RXSM_TRANSITION_FAULT] = dxRxSM_hERROR;
+	dxRxSM_state_map[DMX_RXSM_STATE_COMPLETE	][DMX_RXSM_TRANSITION_FAULT] = dxRxSM_hERROR;
+	dxRxSM_state_map[DMX_RXSM_STATE_ERROR	    ][DMX_RXSM_TRANSITION_FAULT] = dxRxSM_hERROR;
+	dxRxSM_state_map[DMX_RXSM_STATE_FAULT	    ][DMX_RXSM_TRANSITION_FAULT] = dxRxSM_hERROR;
 
 }
 
-// -----------------------------------------------------------------------------
-// RX double-buffered
-// -----------------------------------------------------------------------------
-static uint8_t	dmx_rxsm_buf [2][DMX_MAX_BUFFER_SIZE] = {0};
-static volatile	uint8_t		dmx_rxsm_active_buffer = DMX_RXSM_BUF_A;
-
-static volatile uint16_t	dmx_rxsm_byte_counter;			// rx bytes
-static volatile	uint8_t		dmx_rxsm_frame_counter = 0;		// rx frames
-static volatile	uint8_t		dmx_rxsm_active_state;			// 
-
-static __inline uint8_t* rx_active_buffer()
-{
-	return dmx_rxsm_buf[dmx_rxsm_active_buffer];
-}
-
-static __inline void buffer_swap (void)
-{
-	if (dmx_rxsm_active_buffer == DMX_RXSM_BUF_A)
-		{ dmx_rxsm_active_buffer = DMX_RXSM_BUF_B; }
-	else
-		{ dmx_rxsm_active_buffer = DMX_RXSM_BUF_A; }	
-}
-
-static __inline int data_updated (void)
-{
-	static uint16_t last_frame = 0xFFFF;
-	int result = (dmx_rxsm_frame_counter != last_frame);
-	last_frame = dmx_rxsm_frame_counter;
-	return result;
-}
 
 // -----------------------------------------------------------------------------
 // RX STATE MACHINE IRQ HANDLER
@@ -153,14 +216,14 @@ void USART1_IRQHandler(void)
 	if (rxflags & USART_SR_ORE)
 	{
 		transition = DMX_RXSM_TRANSITION_FAULT;
-		if (dmx_rxsm_FAULT_ORE != 0)
-		 { dmx_rxsm_FAULT_ORE(__LINE__, __FILE__, "Your MCU is too slow");	}
+		if (dxRxSM_FAULT_ORE != 0)
+		 { dxRxSM_FAULT_ORE(__LINE__, __FILE__, "Your MCU is too slow");	}
 	}
 	else if (rxflags & USART_SR_NE)
 	{
 		transition = DMX_RXSM_TRANSITION_FAULT;
-		if (dmx_rxsm_FAULT_NE != 0)
-		 { dmx_rxsm_FAULT_NE(__LINE__, __FILE__, "UART Noise, check your cables");	}	
+		if (dxRxSM_FAULT_NE != 0)
+		 { dxRxSM_FAULT_NE(__LINE__, __FILE__, "UART Noise, check your cables");	}	
 	}
 	else if (BREAK_detected)
 		{ transition = DMX_RXSM_TRANSITION_BREAK; }
@@ -171,20 +234,20 @@ void USART1_IRQHandler(void)
 	else 
 		{ transition = DMX_RXSM_TRANSITION_RXNE; }
 
-	tr_handler = dmx_rxsm_state_map[dmx_rxsm_active_state][transition];
+	tr_handler = dxRxSM_state_map[dxRxSM_active_state][transition];
 	if (tr_handler != 0)
 		{ tr_handler(rxdata, rxflags, BREAK_detected);}
 	else
 		{
-		if (dmx_rxsm_FAULT_ASSERT) 
-			{ dmx_rxsm_FAULT_ASSERT(__LINE__, __FILE__, "RXSM map not initialised");}
+		if (dxRxSM_FAULT_ASSERT) 
+			{ dxRxSM_FAULT_ASSERT(__LINE__, __FILE__, "RXSM map not initialised");}
 		}
 
 #ifdef DMX_DEBUG	
 	// debug pins for logic analyser
-	GPIOA->BSRR = (dmx_rxsm_active_state == DMX_RXSM_STATE_ARMED) 	? GPIO_BSRR_BS2 : GPIO_BSRR_BR2;
-	GPIOA->BSRR = (dmx_rxsm_active_state == DMX_RXSM_STATE_DATA) 	? GPIO_BSRR_BS4 : GPIO_BSRR_BR4;
-	GPIOA->BSRR = (dmx_rxsm_active_state == DMX_RXSM_STATE_ERROR) 	? GPIO_BSRR_BS5 : GPIO_BSRR_BR5;
+	GPIOA->BSRR = (dxRxSM_active_state == DMX_RXSM_STATE_ARMED) 	? GPIO_BSRR_BS2 : GPIO_BSRR_BR2;
+	GPIOA->BSRR = (dxRxSM_active_state == DMX_RXSM_STATE_DATA) 	? GPIO_BSRR_BS4 : GPIO_BSRR_BR4;
+	GPIOA->BSRR = (dxRxSM_active_state == DMX_RXSM_STATE_ERROR) 	? GPIO_BSRR_BS5 : GPIO_BSRR_BR5;
 	GPIOA->BSRR = GPIO_BSRR_BR3; 	// measure IRQ handler time
 #endif
 }
@@ -213,9 +276,9 @@ void TIM4_IRQHandler(void)
 
 	if (still_counter >= DMX_RXSM_DATA_TIMEOUT)
 		{ pattern = DMX_RXSM_INDICATOR_SLOW; }
-	else if (dmx_rxsm_active_state == DMX_RXSM_STATE_FAULT)
+	else if (dxRxSM_active_state == DMX_RXSM_STATE_FAULT)
 		{ pattern = DMX_RXSM_INDICATOR_SLOW; }
-	else if(dmx_rxsm_active_state == DMX_RXSM_STATE_ERROR)
+	else if(dxRxSM_active_state == DMX_RXSM_STATE_ERROR)
 		{ pattern = DMX_RXSM_INDICATOR_SLOW; }
 
 	GPIOC->BSRR = ((pattern) & (1<<indicator)) ? GPIO_BSRR_BR13 : GPIO_BSRR_BS13;
@@ -225,18 +288,18 @@ void TIM4_IRQHandler(void)
 // ----------------------------------------------------------------------------
 // STATE MACHINE INIT
 // ----------------------------------------------------------------------------
-void dmx_rxsm_initsm (void)
+void dxRxSM_initsm (void)
 {
-	dmx_rxsm_mapinit();
-	dmx_rxsm_active_state 	= DMX_RXSM_STATE_AWAIT;	
-	dmx_rxsm_active_buffer	= DMX_RXSM_BUF_A;
-	dmx_rxsm_frame_counter 	= 0;
-	dmx_rxsm_byte_counter	= 0;
+	dxRxSM_mapinit();
+	dxRxSM_active_state 	= DMX_RXSM_STATE_AWAIT;	
+	dxRxSM_active_buffer	= DMX_RXSM_BUF_A;
+	dxRxSM_frame_counter 	= 0;
+	dxRxSM_byte_counter	= 0;
 }
 // ----------------------------------------------------------------------------
 // HARDWARE INIT (STM32F103Cx) 
 // ----------------------------------------------------------------------------
-void dmx_rxsm_inithw_STM32F103Cx()
+void dxRxSM_inithw_STM32F103Cx()
 {
 	// ------------------------------------------------------
 	// LED pin PC13 output open-drain
