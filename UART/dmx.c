@@ -257,7 +257,8 @@ void USART1_IRQHandler(void)
 // LED at PC13
 // -----------------------------------------------------------------------------
 
-void TIM4_IRQHandler(void)
+//void TIM4_IRQHandler(void)
+void RenameThistFunc_ex_TIM4_IRQHandler(void)
 {
 	static uint8_t 	indicator 	= 0; 						// indicator pattern pointer
 	static uint8_t	pattern		= DMX_RXSM_INDICATOR_OFF; 	//
