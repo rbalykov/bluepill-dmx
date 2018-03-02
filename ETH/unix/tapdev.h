@@ -38,8 +38,10 @@
 #ifndef __TAPDEV_H__
 #define __TAPDEV_H__
 
-void tapdev_init(void);
-unsigned int tapdev_read(void);
+#include <stdint.h>
+
+uint8_t tapdev_init(void);			 
+uint16_t tapdev_read(void);
 void tapdev_send(void);
 
 #endif /* __TAPDEV_H__ */

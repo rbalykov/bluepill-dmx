@@ -37,22 +37,13 @@
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
-#if 0
 
 #include "clock-arch.h"
-#include <sys/time.h>
 
+//uIP clock, increased by user defined timer. (here we use timer6)
+extern unsigned int uip_timer;//10ms as period
 /*---------------------------------------------------------------------------*/
-clock_time_t
-clock_time(void)
+clock_time_t clock_time(void)
 {
-  struct timeval tv;
-  struct timezone tz;
-
-  gettimeofday(&tv, &tz);
-
-  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+	return uip_timer; /*10ms*/	 
 }
-/*---------------------------------------------------------------------------*/
-
-#endif

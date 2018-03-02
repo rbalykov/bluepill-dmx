@@ -35,6 +35,28 @@
 #define __CLOCK_ARCH_H__
 
 typedef int clock_time_t;
-#define CLOCK_CONF_SECOND 1000
+#define CLOCK_CONF_SECOND 100
+
+clock_time_t clock_time(void);
 
 #endif /* __CLOCK_ARCH_H__ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
