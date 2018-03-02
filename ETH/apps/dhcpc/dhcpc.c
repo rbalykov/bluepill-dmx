@@ -318,6 +318,7 @@ PT_THREAD(handle_dhcp(void))
 
   PT_END(&s.pt);
 }
+#if 0
 /*---------------------------------------------------------------------------*/
 void
 dhcpc_init(const void *mac_addr, int mac_len)
@@ -335,6 +336,9 @@ dhcpc_init(const void *mac_addr, int mac_len)
   }
   PT_INIT(&s.pt);
 }
+
+#endif
+
 /*---------------------------------------------------------------------------*/
 void
 dhcpc_appcall(void)
