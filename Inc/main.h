@@ -91,6 +91,12 @@
 #define SWCLK_GPIO_Port GPIOA
 #define ETH_RST_Pin GPIO_PIN_15
 #define ETH_RST_GPIO_Port GPIOA
+#define NHOLD_Pin GPIO_PIN_3
+#define NHOLD_GPIO_Port GPIOB
+#define NWP_Pin GPIO_PIN_4
+#define NWP_GPIO_Port GPIOB
+#define SC_FLASH_Pin GPIO_PIN_5
+#define SC_FLASH_GPIO_Port GPIOB
 #define TTL1_Pin GPIO_PIN_6
 #define TTL1_GPIO_Port GPIOB
 #define TTL2_Pin GPIO_PIN_7
