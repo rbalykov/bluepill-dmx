@@ -1,8 +1,8 @@
+#if 0
 
 #include "usb_lib.h"
 #include "usb_desc.h"
 
-//#ifdef TARGET_MIDI
 // ============================================================================
 // Table B-1 : MIDI Adapter Device Descriptor =================================
 // ============================================================================
@@ -160,3 +160,4 @@ uint8_t Midi_StringSerial[MIDI_SIZ_STRING_SERIAL] =
   };
 
 
+#endif
