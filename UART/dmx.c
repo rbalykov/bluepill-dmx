@@ -1,8 +1,9 @@
-#include "stm32f10x_usart.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_tim.h"
+//#include "stm32f10x_usart.h"
+//#include "stm32f10x_gpio.h"
+//#include "stm32f10x_rcc.h"
+//#include "stm32f10x_tim.h"
 
+#include "stm32f1xx_hal.h"
 #include "dmx.h"
 #include <stdint.h> 
 
@@ -16,7 +17,7 @@ void USART1_IRQHandler	(void);
 static volatile	uint8_t		dxTxSM_active_state = 0;			
 static volatile uint16_t	dxTxSM_byte_counter  = 0;		 
 
-static __inline int tx_dummy_foo () 	{ return 0; }
+//static __inline int tx_dummy_foo () 	{ return 0; }
 typedef int (*TXSM_FaultHandler_t)(int line,char *file, char *message);	
 
 int dxTxSM_fhASSERT (int l, char* f, char* m) { return 0;}
@@ -184,7 +185,7 @@ void dxRxSM_mapinit (void)
 // -----------------------------------------------------------------------------
 // RX STATE MACHINE IRQ HANDLER
 // -----------------------------------------------------------------------------
-void USART1_IRQHandler(void)
+void USART1_IRQHandler__old(void)
 {
 #ifdef DMX_DEBUG
 	GPIOA->BSRR = GPIO_BSRR_BS3;	// measure IRQ handler time
@@ -257,6 +258,7 @@ void USART1_IRQHandler(void)
 // LED at PC13
 // -----------------------------------------------------------------------------
 
+#if 0
 //void TIM4_IRQHandler(void)
 void RenameThistFunc_ex_TIM4_IRQHandler(void)
 {
@@ -286,6 +288,7 @@ void RenameThistFunc_ex_TIM4_IRQHandler(void)
 	indicator++;	
 	indicator = (indicator > 7) ? 0 : indicator;	// range [0 to 7]
 }
+#endif
 // ----------------------------------------------------------------------------
 // STATE MACHINE INIT
 // ----------------------------------------------------------------------------

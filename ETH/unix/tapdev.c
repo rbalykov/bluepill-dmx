@@ -35,6 +35,7 @@
  */	    
 #include "tapdev.h"
 #include "uip.h"
+#include "uip_arp.h"
 #include "enc28j60.h"
 
 //MAC address
@@ -47,7 +48,7 @@ uint8_t tapdev_init(void)
 	uint8_t i,res=0;					  
 	res=ENC28J60_Init((uint8_t*)mymac);	//setup ENC28J60					  
 	//write IP address and MAC address into buffer
- 	for (i = 0; i < 6; i++)uip_ethaddr.addr[i]=mymac[i];  
+ 	for (i = 0; i < 6; i++) uip_ethaddr.addr[i]=mymac[i];  
     //RJ45 LED indicator setup    
 	ENC28J60_PHY_Write(PHLCON,0x0476);
 	return res;	

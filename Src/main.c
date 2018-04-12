@@ -51,7 +51,22 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
+// #include "stm32f10x_gpio.h"
 
+//#include "stm32f10x.h"
+//#include "stm32f10x_conf.h"
+//#include "led.h"
+/*
+#include "spi2.h"
+#include "usart2.h"
+#include "myprintf.h"
+#include "enc28j60.h"
+#include "timer6.h"
+#include "uip.h"
+#include "tapdev.h"
+#include "timer.h" //it is timer.h of uIP Lib
+#include "uip_arp.h"
+*/
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -68,6 +83,10 @@ UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+
+#define BUF ((struct uip_eth_hdr *)&uip_buf[0])	
+const uint8_t sudomymac[6]={0x04,0x02,0x35,0x00,0x00,0x01};	
+
 
 /* USER CODE END PV */
 
@@ -87,10 +106,18 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+void uip_polling(void);	//prototype of uIP check job
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
+#define LED_ON()		GPIO_ResetBits( LED_GPIO_Port, LED_Pin );  
+#define LED_OFF()		GPIO_SetBits  ( LED_GPIO_Port, LED_Pin );  
+
+static void delay(uint32_t delay_count)
+{
+	while (delay_count) delay_count--;
+}
 
 /* USER CODE END 0 */
 
@@ -139,7 +166,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	volatile int i=0xFFFF;
+	while (i) {i--;};
+	GPIO_ResetBits( LED_GPIO_Port, LED_Pin );
+	i=0xFFFF;
+	while (i) {i--;};
+	GPIO_SetBits( LED_GPIO_Port, LED_Pin );
+	
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -148,6 +181,96 @@ int main(void)
   /* USER CODE END 3 */
 
 }
+
+
+void  main_eth(void)
+{
+/*
+ 	uip_ipaddr_t ipaddr;
+
+//	LED_Init();	
+//	Usart2_Init(115200);
+
+	Myprintf_Init(0x00,myputc);
+	
+ 	while(tapdev_init())	//ENC28J60 
+	{								   
+		my_printf("\r\nENC28J60 Init Error!");	 
+		delay(80000*200);
+	};
+	uip_init();	//uIP initialize
+
+ 	uip_ipaddr(ipaddr, 2,1,1,101);	//setup local IP
+	uip_sethostaddr(ipaddr);					    
+	uip_ipaddr(ipaddr, 2,1,1,102); 	//setup Gateway
+	uip_setdraddr(ipaddr);						 
+	uip_ipaddr(ipaddr, 255,0,0,0);	//setup Mask
+	uip_setnetmask(ipaddr);
+
+	uip_listen(HTONS(ARTNET_UDP_PORT));			
+
+	while (1) 
+	{
+		uip_polling();	//check uIP  mission every cycle
+		delay(1000);		
+	}
+*/
+}
+
+// ----------------------------------------------------------------------------
+//uIP event check
+//need to be called eevery cycle of main process
+/*
+void uip_polling(void)
+{
+//	u8 i;
+	static struct timer periodic_timer, arp_timer;
+	static u8 timer_ok=0;	 
+	if(timer_ok==0)//initialize timer at first time
+	{
+		timer_ok = 1;
+		timer_set(&periodic_timer,CLOCK_SECOND/2); //creat a timer for 0.5 sec 
+		timer_set(&arp_timer,CLOCK_SECOND*10);	   //creat a timer for 10 sec 
+	}				 
+	uip_len=tapdev_read();	//read an IP packet form ehternet.
+							//get data length uip_len which defined in uip.c 
+	if(uip_len>0) 			//if data exist
+	{   
+		//handle IP packet, only the verified packet is used 
+		if(BUF->type == htons(UIP_ETHTYPE_IP))//IP packet? 
+		{
+//			u32 len = uip_len;
+//			artnet_handle (uip_buf, &len);
+			uip_arp_ipin();	//delete ethernet part
+			uip_input(); 
+			
+			if(uip_len>0)//response data is necessary
+			{
+				uip_arp_out();
+				tapdev_send();
+			}
+		}
+		else if (BUF->type==htons(UIP_ETHTYPE_ARP)) //is ARP packet?
+		{
+			uip_arp_arpin();
+ 			if(uip_len>0)tapdev_send(); //send data via tapdev_send()	 
+		}
+	}
+	else if(timer_expired(&periodic_timer))	//if 0.5sec timer expired
+	{
+		//check if 10sec pass already, for updating ARP 
+		if(timer_expired(&arp_timer))
+		{
+			timer_reset(&arp_timer);
+			uip_arp_timer();
+		}
+	}
+}
+*/
+// ----------------------------------------------------------------------------
+
+
+
 
 /**
   * @brief System Clock Configuration
@@ -329,11 +452,10 @@ static void MX_TIM4_Init(void)
 /* USART1 init function */
 static void MX_USART1_UART_Init(void)
 {
-
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 250000;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_2;
+  huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;

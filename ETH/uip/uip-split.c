@@ -39,11 +39,13 @@
 #include "uip.h"
 #include "uip-fw.h"
 #include "uip_arch.h"
-
+extern void tcpip_output (void);
 
 
 #define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
+
+/*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
 void
 uip_split_output(void)

@@ -42,6 +42,7 @@
 #include "uip-neighbor.h"
 
 #include <string.h>
+#include <myprintf.h>
 
 #define MAX_TIME 128
 
@@ -87,7 +88,7 @@ uip_neighbor_add(uip_ipaddr_t ipaddr, struct uip_neighbor_addr *addr)
   int i, oldest;
   u8_t oldest_time;
 
-  printf("Adding neighbor with link address %02x:%02x:%02x:%02x:%02x:%02x\n",
+  my_printf("Adding neighbor with link address %02x:%02x:%02x:%02x:%02x:%02x\n",
 	 addr->addr.addr[0], addr->addr.addr[1], addr->addr.addr[2], addr->addr.addr[3],
 	 addr->addr.addr[4], addr->addr.addr[5]);
   
