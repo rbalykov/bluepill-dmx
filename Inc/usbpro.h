@@ -27,29 +27,28 @@
 #define DMXUSBPRO_MAX_MESSAGE	(605)
 #define DMXUSBPRO_MESSAGE_START (0x7E)
 #define DMXUSBPRO_MESSAGE_END 	(0xE7)
-#define DMXUSBPRO_ESTA_ID		(0x6A6B)	// DMXKing
-#define DMXUSBPRO_DEVICE_ID		(0x0002)	// UltraDMXPro
 
+extern char 	DEVICE_NAME[];
+extern uint8_t 	DEVICE_NAME_SIZE;
+extern char 	MANUFACTURER_NAME[];
+extern uint8_t 	MANUFACTURER_NAME_SIZE;
 
-extern void usb_rx_handler 	(uint8_t *buf, uint32_t *size);
-extern void message_handler (uint8_t label, uint8_t *buf, uint16_t size);
-
-extern void usb_send (uint8_t label, uint8_t *data, uint16_t size);
+extern void usb_rx_handler 	(uint8_t *data, uint32_t *size);
+extern void message_handler (uint8_t label, uint8_t *data, uint16_t size);
+extern void usb_send 		(uint8_t label, uint8_t *data, uint16_t size);
 
 // Message Label Codes
 enum {
-	PARAMETERS_LABEL 	= 3,
+	LABEL_PARAMS 	= 3,
 	LABEL_RECEIVED_DMX 	= 5,
-	DMX_DATA_LABEL 		= 6,
-	SERIAL_NUMBER_LABEL = 10,
-	MANUFACTURER_LABEL 	= 77,
-	NAME_LABEL 			= 78,
-	RDM_LABEL 			= 82,
+	LABEL_DMXDATA 		= 6,
+	LABEL_SERIAL = 10,
+	LABEL_VENDOR 	= 77,
+	LABEL_NAME 			= 78,
+	LABEL_RDM 			= 82,
 	LABEL_UNIVERSE_0	= 100,
 	LABEL_UNIVERSE_1	= 101
 };
-
-
 
 typedef enum {
 	PRE_SOM = 0,
@@ -59,11 +58,5 @@ typedef enum {
 	IN_DATA = 4,
 	WAITING_FOR_EOM = 5,
 } rx_state_t;
-
-extern char 	DEVICE_NAME[];
-extern uint8_t 	DEVICE_NAME_SIZE;
-extern char 	MANUFACTURER_NAME[];
-extern uint8_t 	MANUFACTURER_NAME_SIZE;
-
 
 #endif // STMSERIAL_USBPRO_DMX_HEADER_FILE

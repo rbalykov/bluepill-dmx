@@ -19,6 +19,7 @@
  * Contains the message labels used to identify packets.
  */
 
+
 #include <string.h> 
 #include "usbpro.h"
 #include "usbd_cdc_if.h"
@@ -35,7 +36,7 @@ uint8_t DEVICE_ID[] = {1, 0};
 
 static rx_state_t	rx_state = PRE_SOM;
 static uint16_t 	rx_data_offset = 0;
-uint8_t 		rx_dmxdata_0[512] = {0};
+uint8_t 		rx_dmxdata_0[513] = {0};
 uint8_t dbg[256] = {0};
 uint8_t dbg_cnt = 0;
 
@@ -52,13 +53,12 @@ void usb_send (uint8_t label, uint8_t *data, uint16_t size)
 
 void usb_rx_handler (uint8_t *buf, uint32_t *size)
 {
-	uint32_t sz = *size;
 	uint32_t cnt = 0;
 	uint8_t data = 0;
 	static uint8_t 		label = 0;
 	static uint16_t 	expected_size = 0;
 
-	for (cnt=0; cnt<sz; cnt++)
+	for (cnt=0; cnt<*size; cnt++)
 	{
 		data = buf[cnt];
 		switch (rx_state) 
@@ -80,14 +80,8 @@ void usb_rx_handler (uint8_t *buf, uint32_t *size)
 				break;
 			case GOT_DATA_LSB:
 				expected_size += (data << 8);
-				if (expected_size == 0) 
-				{
-					rx_state = WAITING_FOR_EOM;
-				} 
-				else 
-				{
-					rx_state = IN_DATA; 
-				}
+				if (expected_size == 0)	{rx_state = WAITING_FOR_EOM;} 
+				else {rx_state = IN_DATA;}
 				break;
 			case IN_DATA:
 				usb_rxbuf[rx_data_offset] = data;
@@ -111,26 +105,26 @@ void message_handler (uint8_t label, uint8_t *buf, uint16_t size)
 {
 	switch (label)
 	{
-		case PARAMETERS_LABEL:
-			usb_send(PARAMETERS_LABEL, 		DEVICE_PARAMS, sizeof(DEVICE_PARAMS));
+		case LABEL_PARAMS:
+			usb_send(LABEL_PARAMS, 		DEVICE_PARAMS, sizeof(DEVICE_PARAMS));
 		break;
-		case SERIAL_NUMBER_LABEL:
-			usb_send(SERIAL_NUMBER_LABEL, 	DEVICE_SERIAL, sizeof(DEVICE_SERIAL));
-		break;
-
-		case MANUFACTURER_LABEL:
-			usb_send(MANUFACTURER_LABEL, 	(uint8_t*)DEVICE_PROVIDER, sizeof(DEVICE_PROVIDER));
+		case LABEL_SERIAL:
+			usb_send(LABEL_SERIAL, 	DEVICE_SERIAL, sizeof(DEVICE_SERIAL));
 		break;
 
-		case NAME_LABEL:
-			usb_send(NAME_LABEL, 			(uint8_t*)DEVICE_NAME, sizeof(DEVICE_NAME));
+		case LABEL_VENDOR:
+			usb_send(LABEL_VENDOR, 	(uint8_t*)DEVICE_PROVIDER, sizeof(DEVICE_PROVIDER));
 		break;
 
-		case DMX_DATA_LABEL:
+		case LABEL_NAME:
+			usb_send(LABEL_NAME, 			(uint8_t*)DEVICE_NAME, sizeof(DEVICE_NAME));
+		break;
+
+		case LABEL_DMXDATA:
 		case LABEL_UNIVERSE_0:
 		case LABEL_UNIVERSE_1:
 		{
-			memcpy(rx_dmxdata_0, &buf[1], size-1);
+			memcpy(rx_dmxdata_0, buf, size);
 		}
 		break;
 	}
