@@ -52,7 +52,7 @@
 #include "main.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "usbpro.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -320,12 +320,24 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
+//	uint8_t *data = Buf;
+//	uint32_t len = *Len;
   /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
+<<<<<<< Updated upstream
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
 
   // Echo symbol back
   CDC_Transmit_FS(Buf, *Len);
+=======
+  
+//  CDC_Transmit_FS(Buf, *Len);
+//	CDC_Transmit_FS("q111", 4);
+//	usb_rx_handler(Buf[0]);
+	usb_rx_handler(Buf, Len);
+//	CDC_Transmit_FS(&Buf[0], 1);
+  
+>>>>>>> Stashed changes
   
   return (USBD_OK);
   /* USER CODE END 6 */
