@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/vj/Documents/111/Inc
+HeaderPath=C:/Users/vj/Documents/111_a/Inc
 HeaderFiles=stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;usb_device.h;usbd_conf.h;usbd_desc.h;usbd_cdc_if.h;
-SourcePath=C:/Users/vj/Documents/111/Src
+SourcePath=C:/Users/vj/Documents/111_a/Src
 SourceFiles=stm32f1xx_it.c;stm32f1xx_hal_msp.c;main.c;usb_device.c;usbd_conf.c;usbd_desc.c;usbd_cdc_if.c;
 
 [PreviousLibFiles]

@@ -49,7 +49,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
-#include "main.h"
 
 /* USER CODE BEGIN INCLUDE */
 #include "usbpro.h"
@@ -201,7 +200,6 @@ static int8_t CDC_DeInit_FS(void)
   return (USBD_OK);
   /* USER CODE END 4 */
 }
-
 
 /**
   * @brief  Manage the CDC class requests
