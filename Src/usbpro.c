@@ -19,7 +19,6 @@
  * Contains the message labels used to identify packets.
  */
 
-
 #include <string.h> 
 #include "usbpro.h"
 #include "usbd_cdc_if.h"
@@ -126,6 +125,9 @@ void message_handler (uint8_t label, uint8_t *buf, uint16_t size)
 		{
 			memcpy(rx_dmxdata_0, buf, size);
 		}
+		break;
+		
+		default:
 		break;
 	}
 }
