@@ -36,8 +36,6 @@ uint8_t DEVICE_ID[] = {1, 0};
 static rx_state_t	rx_state = PRE_SOM;
 static uint16_t 	rx_data_offset = 0;
 uint8_t 		rx_dmxdata_0[513] = {0};
-uint8_t dbg[256] = {0};
-uint8_t dbg_cnt = 0;
 
 void usb_send (uint8_t label, uint8_t *data, uint16_t size)
 {
@@ -64,9 +62,7 @@ void usb_rx_handler (uint8_t *buf, uint32_t *size)
 		{
 			case PRE_SOM:
 				if (data == DMXUSBPRO_MESSAGE_START) 
-					{
-					rx_state = GOT_SOM;
-					}
+					{rx_state = GOT_SOM;}
 				break;
 			case GOT_SOM:
 				label = data;

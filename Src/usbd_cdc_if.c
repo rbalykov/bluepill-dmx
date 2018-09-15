@@ -202,20 +202,7 @@ static int8_t CDC_DeInit_FS(void)
   /* USER CODE END 4 */
 }
 
-void ct_foo(uint8_t cmd, uint8_t buf)
-{
-	static uint8_t cmda[8] = {0};
-	static uint8_t bufa[8] = {0};
 
-	for (int i=7;  i>0; i--) 
-	{
-		cmda[i] = cmda[i-1];
-		bufa[i] = bufa[i-1];
-	}
-	cmda[0] = cmd;
-	bufa[0] = buf;
-	
-}
 /**
   * @brief  Manage the CDC class requests
   * @param  cmd: Command code
@@ -225,7 +212,6 @@ void ct_foo(uint8_t cmd, uint8_t buf)
   */
 static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 {
-	ct_foo(cmd, pbuf[0]);
   /* USER CODE BEGIN 5 */
   switch(cmd)
   {
@@ -275,21 +261,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
     break;
 
     case CDC_SET_CONTROL_LINE_STATE:
-	{
-		if (length || cmd)
-		{
-			if (pbuf[2] & 0x02)
-			{
-			HAL_GPIO_TogglePin (LED_GPIO_Port, LED_Pin);
-//			LED_GPIO_Port
-			}
-		}
 
-//		uint8_t  st = 0x03;
-//		CDC_Transmit_FS(&st, sizeof(st));
-//		st = 0x03;
-//		CDC_Transmit_FS(&st, sizeof(st));
-	}
     break;
 
     case CDC_SEND_BREAK:
@@ -320,25 +292,13 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
-//	uint8_t *data = Buf;
-//	uint32_t len = *Len;
   /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-<<<<<<< Updated upstream
-  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
 
-  // Echo symbol back
-  CDC_Transmit_FS(Buf, *Len);
-=======
-  
-//  CDC_Transmit_FS(Buf, *Len);
-//	CDC_Transmit_FS("q111", 4);
-//	usb_rx_handler(Buf[0]);
 	usb_rx_handler(Buf, Len);
-//	CDC_Transmit_FS(&Buf[0], 1);
+//  CDC_Transmit_FS(Buf, *Len);
   
->>>>>>> Stashed changes
-  
+  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
   return (USBD_OK);
   /* USER CODE END 6 */
 }
