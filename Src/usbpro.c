@@ -23,6 +23,8 @@
 #include "usbpro.h"
 #include "usbd_cdc_if.h"
 
+#include "dmx-dma.h"
+
 static uint8_t usb_rxbuf[DMXUSBPRO_MAX_MESSAGE];
 static uint8_t usb_txbuf[DMXUSBPRO_MAX_MESSAGE];
 
@@ -35,7 +37,7 @@ uint8_t DEVICE_ID[] = {1, 0};
 
 static rx_state_t	rx_state = PRE_SOM;
 static uint16_t 	rx_data_offset = 0;
-uint8_t 		rx_dmxdata_0[513] = {0};
+//uint8_t 		rx_dmxdata_0[513] = {0};
 
 void usb_send (uint8_t label, uint8_t *data, uint16_t size)
 {
@@ -101,7 +103,7 @@ void message_handler (uint8_t label, uint8_t *buf, uint16_t size)
 	switch (label)
 	{
 		case LABEL_PARAMS:
-			usb_send(LABEL_PARAMS, 		DEVICE_PARAMS, sizeof(DEVICE_PARAMS));
+			usb_send(LABEL_PARAMS, 	DEVICE_PARAMS, sizeof(DEVICE_PARAMS));
 		break;
 		case LABEL_SERIAL:
 			usb_send(LABEL_SERIAL, 	DEVICE_SERIAL, sizeof(DEVICE_SERIAL));
@@ -112,14 +114,17 @@ void message_handler (uint8_t label, uint8_t *buf, uint16_t size)
 		break;
 
 		case LABEL_NAME:
-			usb_send(LABEL_NAME, 			(uint8_t*)DEVICE_NAME, sizeof(DEVICE_NAME));
+			usb_send(LABEL_NAME, 	(uint8_t*)DEVICE_NAME, sizeof(DEVICE_NAME));
 		break;
 
 		case LABEL_DMXDATA:
 		case LABEL_UNIVERSE_0:
+		{
+			dmx_handle_input_buffer(DMX_TX_PORT_A, buf, size);
+		}
 		case LABEL_UNIVERSE_1:
 		{
-			memcpy(rx_dmxdata_0, buf, size);
+			dmx_handle_input_buffer(DMX_TX_PORT_B, buf, size);
 		}
 		break;
 		

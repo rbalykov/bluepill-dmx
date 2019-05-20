@@ -51,22 +51,7 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-// #include "stm32f10x_gpio.h"
 
-//#include "stm32f10x.h"
-//#include "stm32f10x_conf.h"
-//#include "led.h"
-/*
-#include "spi2.h"
-#include "usart2.h"
-#include "myprintf.h"
-#include "enc28j60.h"
-#include "timer6.h"
-#include "uip.h"
-#include "tapdev.h"
-#include "timer.h" //it is timer.h of uIP Lib
-#include "uip_arp.h"
-*/
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -87,10 +72,6 @@ DMA_HandleTypeDef hdma_usart3_tx;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-#define BUF ((struct uip_eth_hdr *)&uip_buf[0])	
-const uint8_t sudomymac[6]={0x04,0x02,0x35,0x00,0x00,0x01};	
-
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -110,15 +91,11 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void uip_polling(void);	//prototype of uIP check job
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
 
-#define LED_ON()		GPIO_ResetBits( LED_GPIO_Port, LED_Pin );  
-#define LED_OFF()		GPIO_SetBits  ( LED_GPIO_Port, LED_Pin );  
-
-static void delay(uint32_t delay_count)
+static void delay(volatile uint32_t delay_count)
 {
 	while (delay_count) delay_count--;
 }
@@ -169,12 +146,14 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+//  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
   while (1)
   {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
 
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
   }
   /* USER CODE END 3 */
 
@@ -454,7 +433,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, CTS_EMU_Pin|NHOLD_Pin|NWP_Pin|SC_FLASH_Pin, GPIO_PIN_RESET);

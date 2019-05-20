@@ -64,7 +64,7 @@
 #define UART_MULTDIV (16)
 #define MANTISSA_BITS (4)
 
-void dmx_init (void);
+// void dmx_init (void);
 
 
 #endif
