@@ -24,5 +24,12 @@ extern DMA_HandleTypeDef hdma_usart1_tx;
 extern DMA_HandleTypeDef hdma_usart2_tx;
 extern DMA_HandleTypeDef hdma_usart3_tx;
 
+#define UART_DMX_A	huart1
+#define UART_DMX_B	huart3
+
+
 void dmx_handle_input_buffer (uint8_t buffer_id, uint8_t *data, uint16_t len);
+void dmx_transmit_start (void);
+void dmx_transmit_break (void);
+
 #endif

@@ -122,6 +122,7 @@ void message_handler (uint8_t label, uint8_t *buf, uint16_t size)
 		{
 			dmx_handle_input_buffer(DMX_TX_PORT_A, buf, size);
 		}
+		break;
 		case LABEL_UNIVERSE_1:
 		{
 			dmx_handle_input_buffer(DMX_TX_PORT_B, buf, size);
