@@ -23,13 +23,21 @@ extern UART_HandleTypeDef huart3;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern DMA_HandleTypeDef hdma_usart2_tx;
 extern DMA_HandleTypeDef hdma_usart3_tx;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 
 #define UART_DMX_A	huart1
 #define UART_DMX_B	huart3
+#define UART_TIMER_A	htim2
+#define UART_TIMER_B	htim3
+
+#define DMXTIMING_BREAK_MIN_BITS	(22)
+#define DMXTIMING_MAB_MIN_BITS		(11)
+
+//#define ___DMX_BREAK_START_A()  (HAL_GPIO_WritePin(GPIOB, DMX_EN_A_Pin, GPIO_PIN_SET))
 
 
 void dmx_handle_input_buffer (uint8_t buffer_id, uint8_t *data, uint16_t len);
 void dmx_transmit_start (void);
-void dmx_transmit_break (void);
 
 #endif

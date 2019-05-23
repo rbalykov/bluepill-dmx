@@ -100,12 +100,10 @@ void Error_Handler(void);
 #define ModemTX_GPIO_Port GPIOA
 #define ModemRX_Pin GPIO_PIN_3
 #define ModemRX_GPIO_Port GPIOA
-#define BUTTON_Pin GPIO_PIN_0
-#define BUTTON_GPIO_Port GPIOB
-#define CTS_EMU_Pin GPIO_PIN_1
-#define CTS_EMU_GPIO_Port GPIOB
-#define RTS_EMU_Pin GPIO_PIN_2
-#define RTS_EMU_GPIO_Port GPIOB
+#define DMX_EN_A_Pin GPIO_PIN_0
+#define DMX_EN_A_GPIO_Port GPIOB
+#define DMX_EN_B_Pin GPIO_PIN_1
+#define DMX_EN_B_GPIO_Port GPIOB
 #define DMX_TX_Pin GPIO_PIN_10
 #define DMX_TX_GPIO_Port GPIOB
 #define DMX_RX_Pin GPIO_PIN_11
