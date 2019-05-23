@@ -45,21 +45,19 @@ void dmx_transmit_FE (TIM_HandleTypeDef *htim)
     __HAL_TIM_ENABLE_IT(htim, TIM_IT_UPDATE);
 }
 // -----------------------------------------------------------------------------
-void dmx_transmit_MAB (TIM_HandleTypeDef *htim)
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
-	htim2.Init.Period = DMXTIMING_MAB_MIN_BITS;
-	HAL_TIM_OC_Init(htim);
+	// BREAK end, MAB start
+	uint8_t pin_id = (htim == &UART_TIMER_A) ? DMX_EN_A_Pin: DMX_EN_B_Pin;
 
-    __HAL_TIM_SET_COUNTER(htim, 0);
-    HAL_TIM_Base_Start(htim);
-    __HAL_TIM_ENABLE_IT(htim, TIM_IT_UPDATE);
+	// turn LED VCC on->off
+	HAL_GPIO_WritePin(GPIOB, pin_id, GPIO_PIN_RESET);
 }
 // -----------------------------------------------------------------------------
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	UART_HandleTypeDef *huart;
 	uint8_t port_id;
-	uint16_t pin_id;
 	
 	HAL_TIM_OnePulse_DeInit(htim);
 
@@ -67,17 +65,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		huart = &UART_DMX_A;
 		port_id = DMX_TX_PORT_A;
-		pin_id = DMX_EN_A_Pin;
 	}
 	else
 	{
 		huart = &UART_DMX_B;
 		port_id = DMX_TX_PORT_B;
-		pin_id = DMX_EN_B_Pin;
 	}
-
-	// turn LED VCC on
-	HAL_GPIO_WritePin(GPIOB, pin_id, GPIO_PIN_SET);
 
 	HAL_UART_Transmit_DMA (huart, \
 		data_tx[port_id][port_active_buffer[port_id]], DMX_MAX_BUFFER_SIZE);
@@ -110,8 +103,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 		port_data_updated [port_id]  = DMX_TX_DATA_UNCHANGED;
 	}
 
-	//	BREAK LINE (VCC off)
-	HAL_GPIO_WritePin(GPIOB, pin_id, GPIO_PIN_RESET);
+	//	BREAK LINE (VCC off->on)
+	HAL_GPIO_WritePin(GPIOB, pin_id, GPIO_PIN_SET);
 	dmx_transmit_FE(htim);
 }
 // -----------------------------------------------------------------------------
