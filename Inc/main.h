@@ -92,10 +92,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
-#define ModemCTS_Pin GPIO_PIN_0
-#define ModemCTS_GPIO_Port GPIOA
-#define ModemRTS_Pin GPIO_PIN_1
-#define ModemRTS_GPIO_Port GPIOA
 #define ModemTX_Pin GPIO_PIN_2
 #define ModemTX_GPIO_Port GPIOA
 #define ModemRX_Pin GPIO_PIN_3

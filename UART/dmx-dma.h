@@ -28,16 +28,27 @@ extern TIM_HandleTypeDef htim3;
 
 #define UART_DMX_A	huart1
 #define UART_DMX_B	huart3
+#define UART_DMX_RX	huart2
+
 #define UART_TIMER_A	htim2
 #define UART_TIMER_B	htim3
 
 #define DMXTIMING_BREAK_MIN_BITS	(22)
 #define DMXTIMING_MAB_MIN_BITS		(11)
 
+#define			DMX_RXSM_STATE_AWAIT 	(1)
+#define			DMX_RXSM_STATE_ARMED	(2)
+#define			DMX_RXSM_STATE_IDLE		(3)
+#define			DMX_RXSM_STATE_DATA 	(4)
+#define			DMX_RXSM_STATE_COMPLETE	(5)
+#define			DMX_RXSM_STATE_ERROR	(6)
+#define			DMX_RXSM_STATE_FAULT	(7)
+
 //#define ___DMX_BREAK_START_A()  (HAL_GPIO_WritePin(GPIOB, DMX_EN_A_Pin, GPIO_PIN_SET))
 
 
 void dmx_handle_input_buffer (uint8_t buffer_id, uint8_t *data, uint16_t len);
 void dmx_transmit_start (void);
+void dmx_rx_irq_handler (UART_HandleTypeDef *huart);
 
 #endif

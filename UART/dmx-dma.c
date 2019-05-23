@@ -108,3 +108,10 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	dmx_transmit_FE(htim);
 }
 // -----------------------------------------------------------------------------
+void dmx_rx_irq_handler (UART_HandleTypeDef *huart)
+{
+	static uint8_t BREAK_buf      = 0;
+	static uint8_t BREAK_detected = 0;
+	
+}
+// -----------------------------------------------------------------------------
