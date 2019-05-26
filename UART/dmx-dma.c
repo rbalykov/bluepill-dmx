@@ -3,6 +3,7 @@
 #include <string.h>
 #include "stm32f1xx_hal_gpio.h"
 #include "main.h"
+#include "usbpro.h"
 
 //#define LED_ON()		  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET)  
 //#define LED_OFF()		  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET)  
@@ -10,6 +11,9 @@
 static uint8_t data_tx [DMX_TX_PORT_COUNT][DMX_TX_DOUBLEBUFFERED][DMX_MAX_FRAME_SIZE] = {0};
 static uint8_t port_active_buffer[DMX_TX_PORT_COUNT] = {DMX_TX_BUFFER_A};
 static uint8_t port_data_updated [DMX_TX_PORT_COUNT] = {DMX_TX_DATA_UNCHANGED};
+
+DMX_RX_Port_Handler_t rxport_A;
+uint8_t port_rx_buffer_A[DMX_MAX_FRAME_SIZE] = {0};
 
 // -----------------------------------------------------------------------------
 void dmx_handle_input_buffer (uint8_t port_id, uint8_t *data, uint16_t len)
@@ -23,12 +27,8 @@ void dmx_handle_input_buffer (uint8_t port_id, uint8_t *data, uint16_t len)
 				DMX_TX_BUFFER_B: DMX_TX_BUFFER_A;
 		memcpy(data_tx[port_id][buffer_write_to], data, len);
 		port_data_updated [port_id] = DMX_TX_DATA_UPDATED;
-
-//	if (data_tx[0][1][1] > 100) {LED_ON();}
-//	else {LED_OFF();}
 	}
 }
-
 // -----------------------------------------------------------------------------
 void dmx_tx_start (void)
 {
@@ -75,7 +75,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	HAL_UART_Transmit_DMA (huart, \
 		data_tx[port_id][port_active_buffer[port_id]], DMX_MAX_FRAME_SIZE);
 }
-
 // -----------------------------------------------------------------------------
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -108,14 +107,10 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	dmx_transmit_FE(htim);
 }
 // -----------------------------------------------------------------------------
-
-DMX_RX_Port_Handler_t rxport_A;
-uint8_t port_rx_buffer_A[DMX_MAX_FRAME_SIZE] = {0};
-
 void dmx_rx_start (void)
 {
 	rxport_A.port_rx_FE 	= 0;
-	rxport_A.port_rx_state 	= DMX_RXSM_STATE_AWAIT;
+	rxport_A.port_rx_state 	= DMX_RXSM_STATE_NONE;
 	rxport_A.data_rx 		= port_rx_buffer_A;
 	rxport_A.huart 			= &UART_RX_A;
 	rxport_A.data_updated 	= DMX_RX_DATA_UNCHANGED;
@@ -124,7 +119,7 @@ void dmx_rx_start (void)
 	HAL_LIN_Init (&UART_RX_A, UART_LINBREAKDETECTLENGTH_11B);
 	__HAL_UART_ENABLE_IT (&UART_RX_A, UART_IT_RXNE);
 	__HAL_UART_ENABLE_IT (&UART_RX_A, UART_IT_ERR);
-//	__HAL_UART_ENABLE_IT (&UART_RX_A, UART_IT_LBD);
+	__HAL_UART_ENABLE_IT (&UART_RX_A, UART_IT_LBD);
 }
 // -----------------------------------------------------------------------------
 void dmx_rx_irq_handler (UART_HandleTypeDef *huart)
@@ -134,60 +129,61 @@ void dmx_rx_irq_handler (UART_HandleTypeDef *huart)
 // -----------------------------------------------------------------------------
 void dmx_rx_handler (DMX_RX_Port_Handler_t *hport)
 {
-	uint8_t BREAK_detected;
-	
-	// these two reads clears SR 
+	// these two reads clear FE, NE, ORE, PE 
 	uint16_t rxflags 	= READ_REG(hport->huart->Instance->SR);
 	uint16_t rxdata 	= READ_REG(hport->huart->Instance->DR);
 
+	// FAULT
 	if (rxflags & (USART_SR_ORE | USART_SR_NE))
 	{
-		dmx_rx_fault (hport);
-		return;
+		hport->port_rx_state = DMX_RXSM_STATE_FAULT;
 	}
-
-	hport->port_rx_FE = (hport->port_rx_FE << 1) | ((rxflags & USART_SR_FE)? 1:0) ;
-	BREAK_detected = (hport->port_rx_FE & DMX_RX_FE_BREAK_DETECT_MASK) ? 1 : 0;
-	
-	if (hport->port_rx_FE)
+	// BREAK
+	else if (rxflags & USART_SR_FE)
 	{
-		if (BREAK_detected)
-		{ // not first FE 
-			hport->data_offset 		= 0;
-			hport->port_rx_state 	= DMX_RXSM_STATE_ARMED;
+		if (hport->data_offset < DMX_MIN_FRAME_SIZE)
+		{	// frame incomplete
+			hport->port_rx_state = DMX_RXSM_STATE_FAULT;
 		}
 		else
-		{ // first FE
-			if (hport->data_offset < DMX_MIN_FRAME_SIZE)
-			{	// frame incomplete
-				dmx_rx_fault (hport);
-			}
-			else
-			{	// frame complete
-				dmx_rx_complete (hport); // handle data
-			}
+		{	// frame complete
+			hport->port_rx_state 	= DMX_RXSM_STATE_COMPLETE;
+			hport->data_updated 	= DMX_RX_DATA_UPDATED;
+			hport->indication		= DMX_RX_INDICATION_DATA_ON;
+			dmx_rx_complete (hport); // handle data
 		}
-		return;
-	} // if FE
-
-	if (hport->data_offset < DMX_MAX_FRAME_SIZE)
+	}
+	// MAB
+	else if (rxflags & (USART_SR_LBD))
+	{ //
+		hport->port_rx_state = DMX_RXSM_STATE_ARMED;
+		CLEAR_BIT(hport->huart->Instance->SR, USART_SR_LBD);
+		hport->data_offset 		= 0;
+	}
+	// BYTE
+	else
 	{
-		hport->data_rx[hport->data_offset] = (rxdata & 0xFF);
-		hport->data_offset++;
+		hport->port_rx_state = DMX_RXSM_STATE_DATA;
+	}
+
+	if (hport->port_rx_state == DMX_RXSM_STATE_DATA)
+	{
+		if (hport->data_offset < DMX_MAX_FRAME_SIZE)
+		{
+			hport->data_rx[hport->data_offset] = (rxdata & 0xFF);
+			hport->data_offset++;
+		}
 	}
 }
 // -----------------------------------------------------------------------------
 void dmx_rx_complete (DMX_RX_Port_Handler_t *hport)
 {
-	hport->port_rx_state 	= DMX_RXSM_STATE_COMPLETE;
-	hport->data_updated 	= DMX_RX_DATA_UPDATED;
-	hport->data_offset 		= 0;
-	hport->indication		= DMX_RX_INDICATION_DATA_ON;
-	
-	//todo: memcpy
+//	uint16_t size = hport->data_offset + 1;
+//	memcpy(port_rx_usb_buffer_A, hport->data_rx, size);
+	usb_send (LABEL_RECEIVED_DMX, hport->data_rx, hport->data_offset+1);
 }
 // -----------------------------------------------------------------------------
-void dmx_rx_fault (DMX_RX_Port_Handler_t *hport)
+void __dmx_rx_fault (DMX_RX_Port_Handler_t *hport)
 {
 	hport->port_rx_state 	= DMX_RXSM_STATE_FAULT;
 	hport->data_updated 	= DMX_RX_DATA_UNCHANGED;

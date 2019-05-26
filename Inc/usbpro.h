@@ -39,11 +39,11 @@ extern void usb_send 		(uint8_t label, uint8_t *data, uint16_t size);
 
 // Message Label Codes
 enum {
-	LABEL_PARAMS 	= 3,
+	LABEL_PARAMS 		= 3,
 	LABEL_RECEIVED_DMX 	= 5,
 	LABEL_DMXDATA 		= 6,
-	LABEL_SERIAL = 10,
-	LABEL_VENDOR 	= 77,
+	LABEL_SERIAL 		= 10,
+	LABEL_VENDOR 		= 77,
 	LABEL_NAME 			= 78,
 	LABEL_RDM 			= 82,
 	LABEL_UNIVERSE_0	= 100,
@@ -52,7 +52,7 @@ enum {
 
 typedef enum {
 	PRE_SOM = 0,
-	GOT_SOM = 1,
+ 	GOT_SOM = 1,
 	GOT_LABEL = 2,
 	GOT_DATA_LSB = 3,
 	IN_DATA = 4,

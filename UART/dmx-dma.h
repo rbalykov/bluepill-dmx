@@ -3,7 +3,6 @@
 #define __DMX_DMA_HEADER_FILE__
 
 #include "stm32f1xx_hal.h"
-//#include "stm32f1xx_hal_uart.h"
 
 #define DMX_MAX_FRAME_SIZE (513)
 #define DMX_MIN_FRAME_SIZE (25)
@@ -46,7 +45,7 @@ extern TIM_HandleTypeDef htim3;
 #define DMXTIMING_BREAK_MIN_BITS	(22)
 #define DMXTIMING_MAB_MIN_BITS		(11)
 
-//#define			DMX_RXSM_STATE_NONE 	(0)
+#define			DMX_RXSM_STATE_NONE 	(0)
 #define			DMX_RXSM_STATE_AWAIT 	(1)
 #define			DMX_RXSM_STATE_ARMED	(2)
 #define			DMX_RXSM_STATE_IDLE		(3)
