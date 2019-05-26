@@ -112,12 +112,12 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+/*
 static void delay(volatile uint32_t delay_count)
 {
 	while (delay_count) delay_count--;
 }
-
+*/
 /* USER CODE END 0 */
 
 /**
@@ -179,8 +179,9 @@ int main(void)
 	__HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);
 	__HAL_TIM_ENABLE_IT(&htim3, TIM_IT_TRIGGER);
 	
-	dmx_transmit_start();
-
+	dmx_tx_start();
+	dmx_rx_start();
+	
   volatile uint32_t i;
   while (1)
   {
@@ -674,7 +675,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, DMX_EN_A_Pin|DMX_EN_B_Pin|NHOLD_Pin|NWP_Pin 

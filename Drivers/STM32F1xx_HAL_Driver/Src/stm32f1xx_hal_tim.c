@@ -2890,7 +2890,7 @@ void HAL_TIM_IRQHandler(TIM_HandleTypeDef *htim)
     }
   }
   /* TIM Break input event */
-  if(__HAL_TIM_GET_FLAG(htim, TIM_FLAG_BREAK) != RESET)
+   if(__HAL_TIM_GET_FLAG(htim, TIM_FLAG_BREAK) != RESET)
   {
     if(__HAL_TIM_GET_IT_SOURCE(htim, TIM_IT_BREAK) !=RESET)
     {
