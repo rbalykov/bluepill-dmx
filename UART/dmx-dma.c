@@ -13,7 +13,7 @@ static uint8_t port_active_buffer[DMX_TX_PORT_COUNT] = {DMX_TX_BUFFER_A};
 static uint8_t port_data_updated [DMX_TX_PORT_COUNT] = {DMX_TX_DATA_UNCHANGED};
 
 DMX_RX_Port_Handler_t rxport_A;
-uint8_t port_rx_buffer_A[DMX_MAX_FRAME_SIZE] = {0};
+uint8_t port_rx_buffer_A[DMX_RX_FRAME_SIZE] = {0};
 
 // -----------------------------------------------------------------------------
 void dmx_handle_input_buffer (uint8_t port_id, uint8_t *data, uint16_t len)
@@ -158,7 +158,8 @@ void dmx_rx_handler (DMX_RX_Port_Handler_t *hport)
 	{ //
 		hport->port_rx_state = DMX_RXSM_STATE_ARMED;
 		CLEAR_BIT(hport->huart->Instance->SR, USART_SR_LBD);
-		hport->data_offset 		= 0;
+		hport->data_rx[0] 		= 0;
+		hport->data_offset 		= 1;
 	}
 	// BYTE
 	else
@@ -168,7 +169,7 @@ void dmx_rx_handler (DMX_RX_Port_Handler_t *hport)
 
 	if (hport->port_rx_state == DMX_RXSM_STATE_DATA)
 	{
-		if (hport->data_offset < DMX_MAX_FRAME_SIZE)
+		if (hport->data_offset < DMX_RX_FRAME_SIZE)
 		{
 			hport->data_rx[hport->data_offset] = (rxdata & 0xFF);
 			hport->data_offset++;
@@ -180,7 +181,7 @@ void dmx_rx_complete (DMX_RX_Port_Handler_t *hport)
 {
 //	uint16_t size = hport->data_offset + 1;
 //	memcpy(port_rx_usb_buffer_A, hport->data_rx, size);
-	usb_send (LABEL_RECEIVED_DMX, hport->data_rx, hport->data_offset+1);
+	usb_send (LABEL_RECEIVED_DMX, hport->data_rx, hport->data_offset);
 }
 // -----------------------------------------------------------------------------
 void __dmx_rx_fault (DMX_RX_Port_Handler_t *hport)

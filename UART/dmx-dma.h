@@ -18,6 +18,7 @@
 #define DMX_TX_DATA_UNCHANGED (0)
 #define DMX_TX_DATA_UPDATED   (1)
 
+#define DMX_RX_FRAME_SIZE (514)
 #define DMX_RX_PORT_COUNT (1)
 #define DMX_RX_PORT_A (0)
 
