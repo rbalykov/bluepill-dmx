@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = 111
+TARGET = neutrino-dmx
 
 
 ######################################
@@ -30,6 +30,8 @@ OPT = -O2
 #######################################
 # Build path
 BUILD_DIR = build
+FLASHTOOL = /usr/bin/stm32flash
+SERIALPORT = /dev/ttyUSB0
 
 ######################################
 # source
@@ -43,6 +45,8 @@ Src/usbd_desc.c \
 Src/usbd_cdc_if.c \
 Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
+Src/usbpro.c \
+Src/dmx-dma.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd_ex.c \
@@ -131,7 +135,6 @@ C_INCLUDES =  \
 -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
 -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
 -IDrivers/CMSIS/Include
--IDrivers/CMSIS/Include
 
 
 # compile gcc flags
@@ -197,6 +200,9 @@ $(BUILD_DIR):
 #######################################
 clean:
 	-rm -fR $(BUILD_DIR)
+
+flash: 
+	sudo $(FLASHTOOL) -b115200 -v -w $(BUILD_DIR)/$(TARGET).hex $(SERIALPORT)
   
 #######################################
 # dependencies
