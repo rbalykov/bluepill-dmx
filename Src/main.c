@@ -182,7 +182,7 @@ int main(void)
 	dmx_tx_start();
 	dmx_rx_start();
 	
-  volatile uint32_t i;
+
   while (1)
   {
     /* USER CODE END WHILE */
