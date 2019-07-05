@@ -85,7 +85,7 @@ static void TIM4_init(void)
 	// This computation of pulse length should work ok,
 	// at some slower core speeds it needs some tuning.
 	tim_period =  SystemCoreClock / 800000; // 0,125us period (10 times lower the 1,25us period to have fixed math below)
-	uint32_t cc1 = (10 * tim_period) / 50;
+	uint32_t cc1 = (10 * tim_period) / 70;
 	uint32_t cc3 = (10 * tim_period) / 15;
 
 	Tim4Handle.Instance = TIM4;

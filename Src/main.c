@@ -57,7 +57,6 @@
 #include "dmx-dma.h"
 #include "pixel_spi.h"
 #include "ws2812b.h"
-#include "visEffect.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
