@@ -24,6 +24,7 @@
 #include "usbd_cdc_if.h"
 
 #include "dmx-dma.h"
+#include "pixel_spi.h"
 
 static uint8_t usb_rxbuf[DMXUSBPRO_MAX_MESSAGE];
 static uint8_t usb_txbuf[DMXUSBPRO_MAX_MESSAGE];
@@ -120,7 +121,8 @@ void message_handler (uint8_t label, uint8_t *buf, uint16_t size)
 		case LABEL_DMXDATA:
 		case LABEL_UNIVERSE_0:
 		{
-			dmx_handle_input_buffer(DMX_TX_PORT_A, buf, size);
+			dmx_handle_input_buffer 	(DMX_TX_PORT_A, buf, size);
+			PIXEL_LPD_handle_dmx_frame 	(DMX_TX_PORT_A, buf, size);
 		}
 		break;
 		case LABEL_UNIVERSE_1:

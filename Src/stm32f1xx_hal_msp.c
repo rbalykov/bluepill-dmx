@@ -202,6 +202,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN SPI1_MspInit 1 */
+    HAL_NVIC_SetPriority(SPI1_IRQn, 1, 0);
+    HAL_NVIC_EnableIRQ(SPI1_IRQn);
 
   /* USER CODE END SPI1_MspInit 1 */
   }
@@ -231,6 +233,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN SPI2_MspInit 1 */
+    HAL_NVIC_SetPriority(SPI2_IRQn, 1, 0);
+    HAL_NVIC_EnableIRQ(SPI2_IRQn);
 
   /* USER CODE END SPI2_MspInit 1 */
   }

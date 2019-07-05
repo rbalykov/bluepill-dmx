@@ -55,6 +55,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "dmx-dma.h"
+#include "pixel_spi.h"
+#include "ws2812b.h"
+#include "visEffect.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -112,12 +115,17 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/*
-static void delay(volatile uint32_t delay_count)
-{
-	while (delay_count) delay_count--;
+
+void led_on(void){
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 }
-*/
+void led_off(void){
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+}
+void led_toggle(void){
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,
+		  (!HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin)));
+}
 /* USER CODE END 0 */
 
 /**
@@ -151,7 +159,7 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   MX_SPI2_Init();
-  MX_TIM4_Init();
+//  MX_TIM4_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
@@ -161,6 +169,8 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
+  //visInit();
+  ws2812b_vis_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -179,8 +189,8 @@ int main(void)
 	__HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);
 	__HAL_TIM_ENABLE_IT(&htim3, TIM_IT_TRIGGER);
 	
-	dmx_tx_start();
-	dmx_rx_start();
+//	dmx_tx_start();
+//	dmx_rx_start();
 	
 
   while (1)
@@ -188,12 +198,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-/*
-	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-	i = 0xFFFFF; while (i--){};
-	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-	i = 0xFFFFF; while (i--){};
-*/ 
+	  ws2812b_loop();
   }
   /* USER CODE END 3 */
 }
@@ -324,7 +329,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -362,7 +367,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;

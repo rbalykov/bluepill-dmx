@@ -22,7 +22,7 @@ TARGET = neutrino-dmx
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -O2
+OPT = -Og
 
 
 #######################################
@@ -47,6 +47,8 @@ Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
 Src/usbpro.c \
 Src/dmx-dma.c \
+Src/pixel_spi.c \
+Src/ws2812b.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd_ex.c \
@@ -202,7 +204,7 @@ clean:
 	-rm -fR $(BUILD_DIR)
 
 flash: 
-	sudo $(FLASHTOOL) -b115200 -v -w $(BUILD_DIR)/$(TARGET).hex $(SERIALPORT)
+	sudo $(FLASHTOOL) -b115200 -w $(BUILD_DIR)/$(TARGET).hex $(SERIALPORT)
   
 #######################################
 # dependencies

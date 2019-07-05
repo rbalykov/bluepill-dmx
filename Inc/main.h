@@ -131,6 +131,9 @@ void Error_Handler(void);
 #define TTL4_Pin GPIO_PIN_9
 #define TTL4_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
+void led_on(void);
+void led_off(void);
+void led_toggle(void);
 
 /* USER CODE END Private defines */
 

@@ -4,6 +4,7 @@
 #include "stm32f1xx_hal_gpio.h"
 #include "main.h"
 #include "usbpro.h"
+#include "ws2812b.h"
 
 //#define LED_ON()		  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET)  
 //#define LED_OFF()		  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET)  
@@ -27,6 +28,11 @@ void dmx_handle_input_buffer (uint8_t port_id, uint8_t *data, uint16_t len)
 				DMX_TX_BUFFER_B: DMX_TX_BUFFER_A;
 		memcpy(data_tx[port_id][buffer_write_to], data, len);
 		port_data_updated [port_id] = DMX_TX_DATA_UPDATED;
+
+		if (len > 1) // remove startcode
+		{
+			ws2812b_handle_dmx(port_id, data+1, len-1);
+		}
 	}
 }
 // -----------------------------------------------------------------------------
@@ -59,21 +65,46 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	UART_HandleTypeDef *huart;
 	uint8_t port_id;
 	
-	HAL_TIM_OnePulse_DeInit(htim);
-
-	if (htim == &UART_TIMER_A)
+	if ((htim->Instance == TIM2) || (htim->Instance == TIM3))
 	{
-		huart = &UART_DMX_A;
-		port_id = DMX_TX_PORT_A;
-	}
-	else
-	{
-		huart = &UART_DMX_B;
-		port_id = DMX_TX_PORT_B;
+		HAL_TIM_OnePulse_DeInit(htim);
+
+		if (htim == &UART_TIMER_A)
+		{
+			huart = &UART_DMX_A;
+			port_id = DMX_TX_PORT_A;
+		}
+		else
+		{
+			huart = &UART_DMX_B;
+			port_id = DMX_TX_PORT_B;
+		}
+
+		HAL_UART_Transmit_DMA (huart, \
+			data_tx[port_id][port_active_buffer[port_id]], DMX_MAX_FRAME_SIZE);
 	}
 
-	HAL_UART_Transmit_DMA (huart, \
-		data_tx[port_id][port_active_buffer[port_id]], DMX_MAX_FRAME_SIZE);
+	if (htim->Instance == TIM4)
+	{
+		// I have to wait 50us to generate Treset signal
+		if (ws2812b.timerPeriodCounter < (uint8_t)WS2812_RESET_PERIOD)
+		{
+			// count the number of timer periods
+			ws2812b.timerPeriodCounter++;
+		}
+		else
+		{
+			ws2812b.timerPeriodCounter = 0;
+			__HAL_TIM_DISABLE(&Tim4Handle);
+			TIM4->CR1 = 0; // disable timer
+
+			// disable the TIM4 Update
+			__HAL_TIM_DISABLE_IT(&Tim4Handle, TIM_IT_UPDATE);
+			// set TransferComplete flag
+			ws2812b.transferComplete = 1;
+		}
+	}
+
 }
 // -----------------------------------------------------------------------------
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
