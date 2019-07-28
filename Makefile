@@ -47,7 +47,6 @@ Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
 Src/usbpro.c \
 Src/dmx-dma.c \
-Src/pixel_spi.c \
 Src/ws2812b.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd.c \

@@ -55,7 +55,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "dmx-dma.h"
-#include "pixel_spi.h"
 #include "ws2812b.h"
 /* USER CODE END Includes */
 
