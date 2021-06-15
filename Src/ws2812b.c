@@ -28,6 +28,7 @@ uint32_t WS2812_IO_Low[] = {WS2812B_PINS << 16};
 uint16_t ws2812bDmaBitBuffer[24 * 2];
 
 static uint8_t frameBuffer [WS2812_BUFFER_COUNT][DMX_RGB_MAX_510_BYTES];
+static void ws2812b_set_pixel(uint8_t row, uint16_t column, uint8_t red, uint8_t green, uint8_t blue);
 
 // Gamma correction table
 const uint8_t gammaTable[] = {
@@ -469,7 +470,7 @@ static void ws2812b_set_pixel(uint8_t row, uint16_t column, uint8_t red, uint8_t
 #elif defined(SETPIX_4)
 
 	// Bitband optimizations with pure increments, 5us interrupts
-	uint32_t *bitBand = BITBAND_SRAM(&ws2812bDmaBitBuffer[(calcCol)], row);
+	volatile uint32_t *bitBand = BITBAND_SRAM(&ws2812bDmaBitBuffer[(calcCol)], row);
 
 	*bitBand =  (invGreen >> 7);
 	bitBand+=16;
