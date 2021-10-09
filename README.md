@@ -1,4 +1,4 @@
-# neutrino-dmx
+# blueplill-dmx
 USB-DMX Interface with WS2812 support.
 (C) 2019, GNU GPL v3
 
